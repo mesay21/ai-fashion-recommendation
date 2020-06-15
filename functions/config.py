@@ -1,8 +1,10 @@
+# Basics
 import os 
 import json
 import numpy as numpy
 from PIL import Image
 
+# Torch
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -12,6 +14,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.nn.utils.rnn import pad_packed_sequence
 from torchvision import datasets, models, transforms
 
+# Functions
 from functions.utils import seqs2batch
 from functions.model import Bi_lstm
 from functions.loss import LSTM_loss
@@ -37,6 +40,9 @@ filenames = {'train': 'train_no_dup.json',
 data_params = {'img_dir': 'data/images', 'json_dir': 'data/label', 'json_files': filenames, 'batch_size':batch_size, 'batch_first':batch_first}
 
 optimization_params = {'learning_rate': lr, 'weight_decay': 1e-4}
+
+
+# Create vocabulary dictionary  
 
 def create_vocab(dictFile):
 	my_vocab = {}
@@ -64,25 +70,27 @@ def config(network_params, data_params, optimizer_params, cuda_params):
 
     model = Bi_lstm(input_dim, hidden_dim, vocab_size, data_params['batch_first'],dropout=0.7, freeze=freeze)
 
-        # 1) resize 2) crop 3) ToTensor 4) Normalize
-    img_size = 299
+    # 1) resize 2) crop 3) Flip 4) Rotate 5) ToTensor
 
     img_transforms = {
         'train': transforms.Compose([
-            transforms.RandomResizedCrop(299),
+            transforms.Resize((305,305)),
+            transforms.RandomCrop((299,299)),
             transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transforms.RandomRotation(5),
+            transforms.ToTensor()
+
+            #transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'val': transforms.Compose([
-            #transforms.Resize(256),
-            transforms.CenterCrop(299),
+            transforms.Resize((299,299)),
+            #transforms.CenterCrop(299),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
         'test': transforms.Compose([
-            #transforms.Resize(256),
-            transforms.CenterCrop(299),
+            transforms.Resize((299,299)),
+            #transforms.CenterCrop(299),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
@@ -96,24 +104,20 @@ def config(network_params, data_params, optimizer_params, cuda_params):
         model.cuda()
 
     dataloaders = {x: torch.utils.data.DataLoader(
-        
         Preprocess(os.path.join(data_params['json_dir'], data_params['json_files'][x]),
-
-                        data_params['img_dir'],
-                        img_transform=img_transforms[x]),#, txt_transform=txt_transforms[x]),
-
-        batch_size=data_params['batch_size'],
-        shuffle=True, num_workers=24,
-        collate_fn=collate_seq,
-        pin_memory=True)
-                   for x in ['train', 'test', 'val']}
+                    data_params['img_dir'],
+                    img_transform=img_transforms[x]),
+                    batch_size=data_params['batch_size'],
+                    shuffle=True, num_workers=24,
+                    collate_fn=collate_seq,
+                    pin_memory=True)
+                    for x in ['train', 'test', 'val']}
 
 
     #print(dataloaders)
 
     # Optimize only the layers with requires_grad = True, not the frozen layers:
-    optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()),
-                          lr=optimizer_params['learning_rate'], weight_decay=optimizer_params['weight_decay'])
+    optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()), lr=optimizer_params['learning_rate'], weight_decay=optimizer_params['weight_decay'])
     
     criterion = LSTM_loss(data_params['batch_first'], cuda_params['cuda'])
 
