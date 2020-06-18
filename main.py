@@ -73,11 +73,11 @@ def train(train_params, dataloaders, cuda, batch_first, epoch_params):
 
 			# loss from (packed_real_batch, prediction), hidden = (hidden_state, cell_state)
 
-			packed_real_batch, (image_features, text_features), (prediction, hidden) = model.forward(images, texts, seq_lens, image_table, text_table, hidden)
+			packed_real_batch, (image_features, text_features), (output, hidden) = model.forward(images, texts, seq_lens, image_table, text_table, hidden)
 
 			# prepare the prediction for computing loss
 
-			prediction_batch, _ = pad_packed_sequence(prediction, batch_first=batch_first) # is batch_first = False after done this? 
+			prediction_batch, _ = pad_packed_sequence(output, batch_first=batch_first) # is batch_first = False after done this? 
 
 			# compute the loss using by non-pytorch loss function
 
@@ -102,9 +102,6 @@ def train(train_params, dataloaders, cuda, batch_first, epoch_params):
 			nb_iters += 1
 
 			if not nb_iters % nb_save:
-			    if not os.path.exists(save_path):
-			        os.makedirs(save_path)
-			    print("Epoch %d (%d iters) -- Saving model in %s" % (epoch, nb_iters, save_path))
 			    if not os.path.exists(save_path):
 			        os.makedirs(save_path)
 			    torch.save(model.state_dict(), "%s_%d.pth" % (

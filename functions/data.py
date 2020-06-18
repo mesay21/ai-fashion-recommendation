@@ -41,7 +41,7 @@ class Preprocess(Dataset):
 		return {'images': images, 'texts': texts, 'ignored': ignored}
 
 
-def collate_seq(batch):
+def collate_fn(batch):
     if isinstance(batch[0], collections.Mapping):
         return batch
 

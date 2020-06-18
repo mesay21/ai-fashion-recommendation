@@ -25,6 +25,7 @@ def seqs2batch(data, vocabulary):
 
 	image_data = [i['images'] for i in data] # i: a set, data: batch of sets
 	text_data = [i['texts'] for i in data]
+
 	seq_lens = torch.zeros(len(image_data)).int()
 
 	image_table = [None] * len(data)
@@ -53,12 +54,27 @@ def seqs2batch(data, vocabulary):
 			image_count += 1 # image count increases by 1
 			word_count += len(text.split()) # word count increases by words in each caption
 
-			seq_lens[set_index] =+ 1
+			seq_lens[set_index] += 1
 
 		image_table[set_index] = image_lookup_in_set
 		text_table[set_index] =   text_lookup_in_set
 
 	return images, texts, seq_lens, image_table, text_table
+
+
+def predict_single_direction(ht, feats):
+	scores = torch.nn.functional.log_softmax(torch.mm(ht, feats.permute(1, 0)), dim=1)
+	max_score, index = torch.max(scores, 1)
+	return index, torch.exp(max_score), scores
+
+
+def predict_multi_direction(hf, hb, feats):
+	scores = torch.nn.functional.log_softmax(torch.mm(hf, feats.permute(1, 0)), dim=1) + \
+			 torch.nn.functional.log_softmax(torch.mm(hb, feats.permute(1, 0)), dim=1)
+	max_score, index = torch.max(scores, 1)
+	return index, torch.exp(max_score), scores
+
+
 
 
 
