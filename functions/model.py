@@ -5,28 +5,45 @@ import torchvision.models as models
 
 from torch.nn.utils.rnn import pack_padded_sequence
 from torchvision.models.inception import model_urls
+#model_urls['inception_v3_google'] = model_urls['inception_v3_google'].replace('https://', 'http://')
 
 class Bi_lstm(nn.Module):
-	def __init__(self, input_size, hidden_size, vocab_size, batch_first=False, dropout=0.0, freeze=False):
+	def __init__(self, input_size, hidden_size, vocab_size, batch_first=False, dropout=0.0, freeze=False, batch_size=10):
 		super(Bi_lstm, self).__init__()
 		self.input_size = input_size
 		self.hidden_size = hidden_size
 		self.batch_first = batch_first
+		self.batch_size = batch_size
+
+
 		self.vocab_size = vocab_size
 		self.text_linear_layer = nn.Linear(vocab_size, input_size)
-		self.cnn = models.resnet18(pretrained=True)
-		self.num_ftrs = self.cnn.fc.in_features
+		#self.cnn = models.inception_v3(pretrained=True)
 
+
+		################
+		self.text_type_fc = nn.Linear(input_size, batch_size)
+
+		self.cnn = models.resnet18(pretrained=True)
+		#self.num_ftrs = self.cnn.fc.in_features
+		#print(self.num_ftrs)
 
 		if freeze:
 			for param in self.cnn.parameters():
 				param.requires_grad = False
 
-		self.cnn.fc = nn.Linear(self.num_ftrs, input_size)
+		#self.cnn.fc = nn.Linear(2048, input_size)
+		self.cnn.fc = nn.Linear(512, input_size)
+
+
+		###
+		self.item_type_fc = nn.Linear(input_size, 12) # 12 item types
+
 		self.lstm = nn.LSTM(input_size, hidden_size, num_layers=1, batch_first=self.batch_first, bidirectional=True, dropout=dropout)
 
 
-	def forward(self, images, texts, seq_lens, image_table, text_table, hidden):
+	def forward(self, images, texts, seq_lens, image_table, text_table, hidden, batch_size):
+		#image_features, _ = self.cnn(images)
 		image_features = self.cnn(images)
 		image_features = torch.nn.functional.normalize(image_features, p=2, dim=1)
 		word_features = self.text_linear_layer(texts)
@@ -40,10 +57,18 @@ class Bi_lstm(nn.Module):
 			text_features_matrix[i, ] = torch.mean(word_features[table_indices[i]], 0)
 
 		text_features_matrix = torch.nn.functional.normalize(text_features_matrix, p=2, dim=1)
+		##################### 
+		text_types = self.text_type_fc(text_features_matrix)
 
+		### 
+		item_types_features = self.item_type_fc(image_features)
+
+		
 		packed_batch_features = self.prepare_packed_seq(image_features, seq_lens, image_table)
 
-		return packed_batch_features, (image_features, text_features_matrix), self.lstm(packed_batch_features, hidden)
+
+		### 
+		return packed_batch_features, (image_features, text_features_matrix, item_types_features, text_types), self.lstm(packed_batch_features, hidden)
 
 
 	def image_forward(self, images, seq_lens, image_table, hidden):
@@ -57,7 +82,7 @@ class Bi_lstm(nn.Module):
 		cell_state = autograd.Variable(torch.rand(2, batch_size, self.hidden_size) * 2 * 0.08)
 		return (hidden_state, cell_state)
 
-
+	### 
 	def prepare_packed_seq(self, features, seq_lens, image_table):
 		seqs_tensors = autograd.Variable(torch.zeros((len(seq_lens), max(seq_lens), features.size()[1]))).cuda()
 

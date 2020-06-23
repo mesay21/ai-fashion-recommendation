@@ -60,5 +60,7 @@ class LSTM_loss(nn.Module):
 
 			backward_loss = backward_loss - torch.diag(backward_log_prob_square).mean()
 
+		#print(seq_lens_batch)
+
 		return forward_loss/len(seq_lens_batch), backward_loss/len(seq_lens_batch)
 

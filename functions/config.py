@@ -16,11 +16,11 @@ from functions.utils import seqs2batch
 from functions.model import Bi_lstm
 from functions.loss import LSTM_loss
 from functions.data import Preprocess
-from functions.data import collate_fn
+from functions.data import collate_seq
 
 
 
-batch_size = 15
+batch_size = 20
 save_path = '../save_path'
 load_path = None
 lr = 0.2
@@ -62,7 +62,7 @@ def config(network_params, data_params, optimizer_params, cuda_params):
 
     input_dim, hidden_dim, margin, load_path, freeze = network_params
 
-    model = Bi_lstm(input_dim, hidden_dim, vocab_size, data_params['batch_first'],dropout=0.0, freeze=freeze)
+    model = Bi_lstm(input_dim, hidden_dim, vocab_size, data_params['batch_first'], dropout=0.0, freeze=freeze, batch_size=data_params['batch_size'])
 
         # 1) resize 2) crop 3) ToTensor 4) Normalize
     """
@@ -118,7 +118,7 @@ def config(network_params, data_params, optimizer_params, cuda_params):
         print("Loading weights from %s" % load_path)
         model.load_state_dict(torch.load(load_path))
     if cuda_params['cuda']:
-        print("Switching model to gpu")
+        print("model has GPU mode")
         model.cuda()
 
     dataloaders = {x: torch.utils.data.DataLoader(
@@ -130,7 +130,7 @@ def config(network_params, data_params, optimizer_params, cuda_params):
 
         batch_size=data_params['batch_size'],
         shuffle=True, num_workers=24,
-        collate_fn=collate_fn,
+        collate_fn=collate_seq,
         pin_memory=True)
                    for x in ['train', 'test', 'val']}
 
@@ -138,7 +138,8 @@ def config(network_params, data_params, optimizer_params, cuda_params):
     #print(dataloaders)
 
     # Optimize only the layers with requires_grad = True, not the frozen layers:
-    optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()), lr=optimizer_params['learning_rate'], weight_decay=optimizer_params['weight_decay'])
+    optimizer = optim.SGD(filter(lambda x: x.requires_grad, model.parameters()),
+                          lr=optimizer_params['learning_rate'], weight_decay=optimizer_params['weight_decay'])
     
     criterion = LSTM_loss(data_params['batch_first'], cuda_params['cuda'])
 
