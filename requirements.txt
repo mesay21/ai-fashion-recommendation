@@ -1,0 +1,18 @@
+
+# RUN pip install -r requirements.txt
+# RUN conda install --file requirements.txt
+
+# If building docker image, comment out faiss-cpu (Dockerfile will install faiss separately. Otherwise will return "Illegal instruction" error)
+streamlit
+numpy
+matplotlib
+scipy
+scikit-learn
+pandas
+pillow
+pyyaml
+h5py
+
+
+
+
