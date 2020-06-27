@@ -254,7 +254,6 @@ vocab = '../data/vocab.json'
 
 query_dic = {}
 query_dic["image_query"] = []
-query_dic["text_query"] = ""
 arr = [ref_id0, ref_id1, ref_id2, ref_id3, ref_id4]
 arr_types=['tops','bottoms','shoes','bags','accessories']
 
@@ -266,13 +265,14 @@ for i in range(len(arr)):
         splitted = path_to_img.split("/")
         query_dic["image_query"].append(splitted[-2] +'_' + splitted[-1].split('.')[0])
 
-import json
-with open('query.json','w') as output:
-	json.dump([query_dic],output)
+#import json
+#with open('query.json','w') as output:
+#	json.dump([query_dic],output)
 
 print(query_dic)
 
-query = 'query.json'
+#query = 'query.json'
+query = [query_dic]
 
 from generate import Outfits
 

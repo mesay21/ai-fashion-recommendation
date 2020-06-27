@@ -29,7 +29,6 @@ class Outfits:
         self.feats_path = feats_path#'../saved_features'
         self.img_path = img_path#'./saved_outfit_images'
         self.cuda = cuda#True
-        #img_savepath = './save_generated_outfits'
         self.query = query#'query.json'
         self.vocab = vocab#'../data/vocab.json'
 
@@ -180,7 +179,7 @@ class Outfits:
     # pylint: disable= R0914
     def generate(self, model_name, feats_name, img_savepath, query_file, vocab_file, cuda):
         """Main function."""
-        queries = json.load(open(query_file))
+        queries = query_file # json.load(open(query_file))
         vocab = json.load(open(vocab_file))
 
         data = h5py.File(feats_name, 'r')
@@ -189,7 +188,7 @@ class Outfits:
             data_dict[fname] = feat
 
 
-        model = Bi_lstm(512, 512, 2758, batch_first=True, dropout=0.7, batch_size=20)
+        model = Bi_lstm(512, 512, 2758, batch_first=True, dropout=0.0, batch_size=20)
 
 
         """Load the model weights."""
@@ -217,6 +216,7 @@ class Outfits:
             # Now, generate outfit for one image (forward and backward prediction until start/stop):
             #query_feats = torch.from_numpy(np.array([data_dict[q] for q in query['image_query']]))
             query_feats = torch.from_numpy(np.array([data_dict[str.encode(q)] for q in query['image_query']]))
+            #query_feats = torch.from_numpy(np.array([data_dict[str.encode(q)] for q in query['image_query']]))
             query_feats = torch.nn.functional.normalize(query_feats, p=2, dim=1)
 
             if cuda:
@@ -286,27 +286,4 @@ class Outfits:
             else:
                 sets = backward_seq + query['image_query'] + forward_seq
 
-            if len(query['text_query']):
-                text_query = txt_norm(query['text_query'])
-                texts = torch.stack([get_one_hot(word, vocab) for word in text_query.split()])
-                texts = torch.autograd.Variable(texts)
-                if cuda:
-                    texts = texts.cuda()
-                text_query_feat = model.textn(texts)
-                text_query_feat = torch.mean(text_query_feat.view(len(text_query_feat), -1), 0)
-                text_query_feat = torch.nn.functional.normalize(text_query_feat.unsqueeze(0), p=2, dim=1)
-
-                sets_text = sets[:]
-                for i, j in enumerate(sets):
-                    if j not in query['image_query']:
-                        sets_text[i] = nn_search(j, text_query_feat, data_dict, answers_feats, cuda)
-
-            print(sets)
-            #create_img_outfit(sets, positions, os.path.join(img_savepath, "%d.jpg" % nq))
-            #create_img_outfit(sets_text, positions, os.path.join(img_savepath, "%d_%s.jpg" % (nq, text_query)))
             return sets
-
-    print("BEFORE X")
-    # main_single_prev(ARGS.model_path, ARGS.model_type, ARGS.feats_path, ARGS.img_path, ARGS.cuda)
-    #x = main(model_path, feats_path, img_path, query, vocab, cuda)
-    print("AFTER X")

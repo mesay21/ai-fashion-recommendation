@@ -19,7 +19,7 @@ def generate_img_features(model_name, feats_filename):
         print("WHY-3")  
         batch_size = 1
 
-        model = Bi_lstm(512, 512, 2758, batch_first=True, dropout=0.7, batch_size=20)
+        model = Bi_lstm(512, 512, 2758, batch_first=True, dropout=0.0, batch_size=20)
         print("WHY-2") 
         evaluator = Evaluation(model, model_name, 'data/images',batch_first=True, cuda=True)
         print("WHY-1")    
