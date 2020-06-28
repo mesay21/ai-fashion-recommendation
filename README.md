@@ -1,10 +1,6 @@
 # ai-fashion-recommendation
 
 # DressUp
-
-Leveraging natural language processing and deep learning technology to help English language learners on the road to
-fluency.
-
 DressUp is an AI-based fashion recommendation system for complete outfit based on the decision behavior of fashion experts. This repo includes a webapp that demonstrate the structure of the recommendation system. This product is created for a fashion website to give a complete outfit recommendation for the website's users based on the items in the customers' shopping cart or wardrobes. 
 
 ## Quick Start
