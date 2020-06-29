@@ -271,40 +271,42 @@ for i in range(len(arr)):
 
 print(query_dic)
 
-#query = 'query.json'
-query = [query_dic]
+if query_dic != {}:
 
-from generate import Outfits
+    #query = 'query.json'
+    query = [query_dic]
 
-outfit = Outfits(model_path, feats_path, img_path, cuda, query, vocab)
+    from generate import Outfits
 
-result_outfits = outfit.generate(model_path, feats_path, img_path, query, vocab, cuda)
+    outfit = Outfits(model_path, feats_path, img_path, cuda, query, vocab)
 
-for i in range(len(result_outfits)):
-    if type(result_outfits[i]) == str:
-        result_outfits[i] = result_outfits[i].encode()
+    result_outfits = outfit.generate(model_path, feats_path, img_path, query, vocab, cuda)
 
-outfit_names = ['../data/images/' + str(i.decode()).replace('_', '/') + '.jpg' for i in result_outfits]
-print(outfit_names)
-print("OUTFIT_NAMES")
+    for i in range(len(result_outfits)):
+        if type(result_outfits[i]) == str:
+            result_outfits[i] = result_outfits[i].encode()
 
-
-### SHOW RESULTS ON WEBSITE
-
-#st.sidebar.header('GENERATED OUTFITS')
-
-REF_IMG_PATHS = outfit_names
-#print(np.array(cv2.imread(REF_IMG_PATHS[0])).shape)
-st.header('GENERATED OUTFITS')
-montage = build_montages(REF_IMG_PATHS, (250, 250), (6, math.ceil(len(REF_IMG_PATHS)/MONTAGE_COL)))
-st.image(montage, width=None)#use_column_width=True)
+    outfit_names = ['../data/images/' + str(i.decode()).replace('_', '/') + '.jpg' for i in result_outfits]
+    print(outfit_names)
+    print("OUTFIT_NAMES")
 
 
-#ref_id4 = st.sidebar.text_input('Enter preferred furniture ID', '0', key='e')
-#assert ref_id4.isnumeric(), 'Please enter a number'
+    ### SHOW RESULTS ON WEBSITE
+
+    #st.sidebar.header('GENERATED OUTFITS')
+
+    REF_IMG_PATHS = outfit_names
+    #print(np.array(cv2.imread(REF_IMG_PATHS[0])).shape)
+    st.header('GENERATED OUTFITS')
+    montage = build_montages(REF_IMG_PATHS, (250, 250), (6, math.ceil(len(REF_IMG_PATHS)/MONTAGE_COL)))
+    st.image(montage, width=None)#use_column_width=True)
 
 
-#ref_img, x = load_image(REF_IMG_PATHS[int(ref_id4)])
-#st.sidebar.image(ref_img, use_column_width=True)
+    #ref_id4 = st.sidebar.text_input('Enter preferred furniture ID', '0', key='e')
+    #assert ref_id4.isnumeric(), 'Please enter a number'
+
+
+    #ref_img, x = load_image(REF_IMG_PATHS[int(ref_id4)])
+    #st.sidebar.image(ref_img, use_column_width=True)
 
 
