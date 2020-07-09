@@ -50,6 +50,8 @@ def train(train_params, dataloaders, cuda, batch_first, epoch_params):
 	model, criterion, optimizer, scheduler, vocabulary, freeze = train_params
 	nb_epochs, nb_save, save_path = epoch_params
 	nb_iters = 0
+	if not os.path.exists(save_path):
+		os.makedirs(save_path)
 
 	for epoch in range(nb_epochs):
 
@@ -156,8 +158,7 @@ def train(train_params, dataloaders, cuda, batch_first, epoch_params):
 			nb_iters += 1
 
 			if not nb_iters % nb_save:
-			    if not os.path.exists(save_path):
-			        os.makedirs(save_path)
+
 			    print("Epoch %d (%d iters) -- Saving model in %s" % (epoch, nb_iters, save_path))
 			    if not os.path.exists(save_path):
 			        os.makedirs(save_path)
